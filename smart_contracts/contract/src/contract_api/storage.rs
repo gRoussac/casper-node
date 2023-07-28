@@ -95,42 +95,42 @@ pub fn new_uref<T: CLTyped + ToBytes>(init: T) -> URef {
 /// the future; if you want a contract that is locked (i.e. cannot be upgraded) call
 /// `new_locked_contract` instead.
 /// if `named_keys` are provided, will apply them
-/// if `hash_name` is provided, puts contract hash in current context's named keys under `hash_name`
+/// if `package_hash_name` is provided, puts contract's package hash in current context's named keys under `package_hash_name`
 /// if `uref_name` is provided, puts access_uref in current context's named keys under `uref_name`
 pub fn new_contract(
     entry_points: EntryPoints,
     named_keys: Option<NamedKeys>,
-    hash_name: Option<String>,
+    package_hash_name: Option<String>,
     uref_name: Option<String>,
 ) -> (ContractHash, ContractVersion) {
-    create_contract(entry_points, named_keys, hash_name, uref_name, false)
+    create_contract(entry_points, named_keys, package_hash_name, uref_name, false)
 }
 
 /// Create a locked contract stored under a Key::Hash, which can never be upgraded. This is an
 /// irreversible decision; for a contract that can be upgraded use `new_contract` instead.
 /// if `named_keys` are provided, will apply them
-/// if `hash_name` is provided, puts contract hash in current context's named keys under `hash_name`
+/// if `package_hash_name` is provided, puts contract's package hash in current context's named keys under `package_hash_name`
 /// if `uref_name` is provided, puts access_uref in current context's named keys under `uref_name`
 pub fn new_locked_contract(
     entry_points: EntryPoints,
     named_keys: Option<NamedKeys>,
-    hash_name: Option<String>,
+    package_hash_name: Option<String>,
     uref_name: Option<String>,
 ) -> (ContractHash, ContractVersion) {
-    create_contract(entry_points, named_keys, hash_name, uref_name, true)
+    create_contract(entry_points, named_keys, package_hash_name, uref_name, true)
 }
 
 fn create_contract(
     entry_points: EntryPoints,
     named_keys: Option<NamedKeys>,
-    hash_name: Option<String>,
+    package_hash_name: Option<String>,
     uref_name: Option<String>,
     is_locked: bool,
 ) -> (ContractHash, ContractVersion) {
     let (contract_package_hash, access_uref) = create_contract_package(is_locked);
 
-    if let Some(hash_name) = hash_name {
-        runtime::put_key(&hash_name, contract_package_hash.into());
+    if let Some(package_hash_name) = package_hash_name {
+        runtime::put_key(&package_hash_name, contract_package_hash.into());
     };
 
     if let Some(uref_name) = uref_name {
