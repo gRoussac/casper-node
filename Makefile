@@ -107,10 +107,10 @@ check-std-features:
 	cd smart_contracts/contract && $(CARGO) check --all-targets --no-default-features --features=std
 	cd smart_contracts/contract && $(CARGO) check --all-targets --features=std
 
-.PHONY: check-sdk-features
-check-sdk-features:
-	$(CARGO) check --all-targets --no-default-features --features=sdk
-	$(CARGO) check --all-targets --features=sdk
+.PHONY: check-no-default-features
+check-no-default-features:
+	$(CARGO) check --all-targets --no-default-features
+	$(CARGO) check --all-targets
 
 .PHONY: check-format
 check-format:
@@ -130,10 +130,9 @@ lint: lint-contracts-rs lint-default-features lint-all-features lint-smart-contr
 lint-default-features:
 	$(CARGO) clippy --all-targets -- -D warnings -A renamed_and_removed_lints
 
-.PHONY: lint-sdk-features
-lint-sdk-features:
-	$(CARGO) clippy --all-targets --features=sdk -- -D warnings
-
+.PHONY: lint-no-default-features
+lint-no-default-features:
+	$(CARGO) clippy --all-targets --no-default-features -- -D warnings
 
 .PHONY: lint-all-features
 lint-all-features:
@@ -167,7 +166,7 @@ check-rs: \
 	lint \
 	audit \
 	check-std-features \
-	check-sdk-features \
+	check-no-default-features \
 	test-rs \
 	test-rs-no-default-features \
 	test-contracts-rs

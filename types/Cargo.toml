@@ -82,6 +82,7 @@ thiserror = "1"
 untrusted = "0.7.1"
 
 [features]
+default = ["std-output"]
 json-schema = ["once_cell", "schemars"]
 std = [
   "derp",
@@ -93,10 +94,10 @@ std = [
   "thiserror",
   "untrusted",
 ]
+std-output = []
 testing = ["proptest", "proptest-derive", "rand_pcg", "strum"]
 # DEPRECATED - use "testing" instead of "gens".
 gens = ["testing"]
-sdk = ["getrandom/js"]
 
 [[bench]]
 name = "bytesrepr_bench"
