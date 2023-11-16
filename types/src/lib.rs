@@ -35,7 +35,7 @@ pub mod crypto;
 mod deploy_info;
 mod era_id;
 mod execution_result;
-#[cfg(any(feature = "std", test))]
+#[cfg(any(all(feature = "std", feature = "std-output"), test))]
 pub mod file_utils;
 mod gas;
 #[cfg(any(feature = "testing", feature = "gens", test))]

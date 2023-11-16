@@ -82,7 +82,7 @@ fn known_secret_key_to_pem(expected_key: &SecretKey, known_key_pem: &str, expect
     assert_eq!(expected_tag, decoded.tag());
 }
 
-#[cfg(any(all(feature = "std", feature = "default"), test))]
+#[cfg(any(all(feature = "std", feature = "std-output"), test))]
 fn secret_key_file_roundtrip(secret_key: SecretKey) {
     let tempdir = tempfile::tempdir().unwrap();
     let path = tempdir.path().join("test_secret_key.pem");
@@ -110,7 +110,7 @@ fn public_key_serialization_roundtrip(public_key: PublicKey) {
     bytesrepr::test_serialization_roundtrip(&public_key);
 }
 
-#[cfg(any(all(feature = "std", feature = "default"), test))]
+#[cfg(any(all(feature = "std", feature = "std-output"), test))]
 fn public_key_der_roundtrip(public_key: PublicKey) {
     let der_encoded = public_key.to_der().unwrap();
     let decoded = PublicKey::from_der(&der_encoded).unwrap();
@@ -142,7 +142,7 @@ fn known_public_key_to_pem(known_key_hex: &str, known_key_pem: &str) {
     assert_eq!(key_bytes, Into::<Vec<u8>>::into(decoded));
 }
 
-#[cfg(any(all(feature = "std", feature = "default"), test))]
+#[cfg(any(all(feature = "std", feature = "std-output"), test))]
 fn public_key_file_roundtrip(public_key: PublicKey) {
     let tempdir = tempfile::tempdir().unwrap();
     let path = tempdir.path().join("test_public_key.pem");

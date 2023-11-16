@@ -11,7 +11,7 @@ use pem::PemError;
 #[cfg(any(feature = "std", test))]
 use thiserror::Error;
 
-#[cfg(any(feature = "std", test))]
+#[cfg(any(all(feature = "std", feature = "std-output"), test))]
 use crate::file_utils::{ReadFileError, WriteFileError};
 
 /// Cryptographic errors.
@@ -76,18 +76,22 @@ pub enum ErrorExt {
 
     /// Error trying to read a secret key.
     #[error("secret key load failed: {0}")]
+    #[cfg(any(all(feature = "std", feature = "std-output"), test))]
     SecretKeyLoad(ReadFileError),
 
     /// Error trying to read a public key.
     #[error("public key load failed: {0}")]
+    #[cfg(any(all(feature = "std", feature = "std-output"), test))]
     PublicKeyLoad(ReadFileError),
 
     /// Error trying to write a secret key.
     #[error("secret key save failed: {0}")]
+    #[cfg(any(all(feature = "std", feature = "std-output"), test))]
     SecretKeySave(WriteFileError),
 
     /// Error trying to write a public key.
     #[error("public key save failed: {0}")]
+    #[cfg(any(all(feature = "std", feature = "std-output"), test))]
     PublicKeySave(WriteFileError),
 
     /// Pem format error.
