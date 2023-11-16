@@ -53,6 +53,7 @@ use crate::{
         requests::{BlockValidationRequest, ContractRuntimeRequest, StorageRequest},
         AutoClosingResponder, EffectBuilder, EffectExt, Effects, Responder,
     },
+    failpoints::Failpoint,
     fatal, protocol,
     types::{
         chainspec::ConsensusProtocolName, BlockHash, BlockHeader, Chainspec, Deploy, DeployHash,
@@ -113,6 +114,9 @@ pub struct EraSupervisor {
     /// The path to the folder where unit files will be stored.
     unit_files_folder: PathBuf,
     last_progress: Timestamp,
+
+    /// Failpoints
+    pub(super) message_delay_failpoint: Failpoint<u64>,
 }
 
 impl Debug for EraSupervisor {
@@ -149,6 +153,7 @@ impl EraSupervisor {
             unit_files_folder,
             next_executed_height: 0,
             last_progress: Timestamp::now(),
+            message_delay_failpoint: Failpoint::new("consensus.message_delay"),
         };
 
         Ok(era_supervisor)
@@ -974,9 +979,18 @@ impl EraSupervisor {
             }
             ProtocolOutcome::CreatedGossipMessage(payload) => {
                 let message = ConsensusMessage::Protocol { era_id, payload };
-                effect_builder
-                    .broadcast_message_to_validators(message.into(), era_id)
-                    .ignore()
+                let delay_by = self.message_delay_failpoint.fire(rng).cloned();
+                async move {
+                    if let Some(delay) = delay_by {
+                        effect_builder
+                            .set_timeout(Duration::from_millis(delay))
+                            .await;
+                    }
+                    effect_builder
+                        .broadcast_message_to_validators(message.into(), era_id)
+                        .await
+                }
+                .ignore()
             }
             ProtocolOutcome::CreatedTargetedMessage(payload, to) => {
                 let message = ConsensusMessage::Protocol { era_id, payload };
@@ -1373,22 +1387,24 @@ async fn check_deploys_for_replay_in_previous_eras_and_validate_block<REv>(
 where
     REv: From<BlockValidationRequest> + From<StorageRequest>,
 {
-    for deploy_hash in proposed_block.value().deploys_and_transfers_iter() {
-        let block_header = match effect_builder
-            .get_block_header_for_deploy_from_storage(deploy_hash.into())
-            .await
-        {
-            None => continue,
-            Some(header) => header,
-        };
-        // We have found the deploy in the database. If it was from a previous era, it was a
-        // replay attack.
+    let deploys_era_ids = effect_builder
+        .get_deploys_era_ids(
+            proposed_block
+                .value()
+                .deploy_and_transfer_hashes()
+                .copied()
+                .collect(),
+        )
+        .await;
+
+    for deploy_era_id in deploys_era_ids {
+        // If the stored deploy was executed in a previous era, it is a replay attack.
         //
-        // If not, then it might be this is a deploy for a block we are currently
+        // If not, then it might be this is a deploy for a block on which we are currently
         // coming to consensus, and we will rely on the immediate ancestors of the
         // block_payload within the current era to determine if we are facing a replay
         // attack.
-        if block_header.era_id() < proposed_block_era_id {
+        if deploy_era_id < proposed_block_era_id {
             return Event::ResolveValidity(ResolveValidity {
                 era_id: proposed_block_era_id,
                 sender,

@@ -145,6 +145,7 @@ use crate::{
         upgrade_watcher::NextUpgrade,
     },
     contract_runtime::SpeculativeExecutionState,
+    failpoints::FailpointActivation,
     reactor::{main_reactor::ReactorState, EventQueueHandle, QueueKind},
     types::{
         appendable_block::AppendableBlock, ApprovalsHashes, AvailableBlockRange, Block,
@@ -1305,17 +1306,18 @@ impl<REv> EffectBuilder<REv> {
         .await
     }
 
-    /// Requests the header of the block containing the given deploy.
-    pub(crate) async fn get_block_header_for_deploy_from_storage(
+    /// Returns the era IDs of the blocks in which the given deploys were executed.  If none of the
+    /// deploys have been executed yet, an empty set will be returned.
+    pub(crate) async fn get_deploys_era_ids(
         self,
-        deploy_hash: DeployHash,
-    ) -> Option<BlockHeader>
+        deploy_hashes: HashSet<DeployHash>,
+    ) -> HashSet<EraId>
     where
         REv: From<StorageRequest>,
     {
         self.make_request(
-            |responder| StorageRequest::GetBlockHeaderForDeploy {
-                deploy_hash,
+            |responder| StorageRequest::GetDeploysEraIds {
+                deploy_hashes,
                 responder,
             },
             QueueKind::FromStorage,
@@ -2097,6 +2099,19 @@ impl<REv> EffectBuilder<REv> {
             QueueKind::Control,
         )
         .await
+    }
+
+    /// Activates/deactivates a failpoint from a given activation.
+    pub(crate) async fn activate_failpoint(self, activation: FailpointActivation)
+    where
+        REv: From<ControlAnnouncement>,
+    {
+        self.event_queue
+            .schedule(
+                ControlAnnouncement::ActivateFailpoint { activation },
+                QueueKind::Control,
+            )
+            .await;
     }
 
     /// Announce that the node be shut down due to a request from a user.

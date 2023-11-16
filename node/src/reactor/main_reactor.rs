@@ -63,6 +63,7 @@ use crate::{
         requests::{AcceptDeployRequest, ChainspecRawBytesRequest},
         EffectBuilder, EffectExt, Effects, GossipTarget,
     },
+    failpoints::FailpointActivation,
     fatal,
     protocol::Message,
     reactor::{
@@ -1147,10 +1148,11 @@ impl reactor::Reactor for MainReactor {
             validator_matrix.clone(),
             registry,
         )?;
-        let block_validator = BlockValidator::new(Arc::clone(&chainspec));
+        let block_validator = BlockValidator::new(Arc::clone(&chainspec), config.block_validator);
         let upgrade_watcher =
             UpgradeWatcher::new(chainspec.as_ref(), config.upgrade_watcher, &root_dir)?;
-        let deploy_acceptor = DeployAcceptor::new(chainspec.as_ref(), registry)?;
+        let deploy_acceptor =
+            DeployAcceptor::new(config.deploy_acceptor, chainspec.as_ref(), registry)?;
         let deploy_buffer =
             DeployBuffer::new(chainspec.deploy_config, config.deploy_buffer, registry)?;
 
@@ -1210,6 +1212,15 @@ impl reactor::Reactor for MainReactor {
         self.memory_metrics.estimate(self);
         self.event_queue_metrics
             .record_event_queue_counts(&event_queue_handle)
+    }
+
+    fn activate_failpoint(&mut self, activation: &FailpointActivation) {
+        if activation.key().starts_with("consensus") {
+            <EraSupervisor as Component<MainEvent>>::activate_failpoint(
+                &mut self.consensus,
+                activation,
+            );
+        }
     }
 }
 
