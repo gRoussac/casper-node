@@ -1,6 +1,6 @@
 //! Utilities for handling reading from and writing to files.
 
-#[cfg(any(feature = "std-output", test))]
+#[cfg(any(feature = "default", test))]
 use std::{fs, io::Write, os::unix::fs::OpenOptionsExt, path::Path};
 use std::{
     io::{self},
@@ -34,7 +34,7 @@ pub struct WriteFileError {
 /// Read complete at `path` into memory.
 ///
 /// Wraps `fs::read`, but preserves the filename for better error printing.
-#[cfg(any(feature = "std-output", test))]
+#[cfg(any(feature = "default", test))]
 pub fn read_file<P: AsRef<Path>>(filename: P) -> Result<Vec<u8>, ReadFileError> {
     let path = filename.as_ref();
     fs::read(path).map_err(|error| ReadFileError {
@@ -46,7 +46,7 @@ pub fn read_file<P: AsRef<Path>>(filename: P) -> Result<Vec<u8>, ReadFileError> 
 /// Write data to `path`.
 ///
 /// Wraps `fs::write`, but preserves the filename for better error printing.
-#[cfg(any(feature = "std-output", test))]
+#[cfg(any(feature = "default", test))]
 pub(crate) fn write_file<P: AsRef<Path>, B: AsRef<[u8]>>(
     filename: P,
     data: B,
@@ -61,7 +61,7 @@ pub(crate) fn write_file<P: AsRef<Path>, B: AsRef<[u8]>>(
 /// Writes data to `path`, ensuring only the owner can read or write it.
 ///
 /// Otherwise functions like [`write_file`].
-#[cfg(any(feature = "std-output", test))]
+#[cfg(any(feature = "default", test))]
 pub(crate) fn write_private_file<P: AsRef<Path>, B: AsRef<[u8]>>(
     filename: P,
     data: B,

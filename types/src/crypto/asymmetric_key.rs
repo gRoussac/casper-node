@@ -13,7 +13,7 @@ use core::{
     iter,
     marker::Copy,
 };
-#[cfg(any(feature = "std", test))]
+#[cfg(any(all(feature = "std", feature = "default"), test))]
 use std::path::Path;
 
 #[cfg(feature = "datasize")]
@@ -59,7 +59,7 @@ use crate::{
 #[cfg(any(feature = "std", test))]
 use crate::crypto::ErrorExt;
 
-#[cfg(any(feature = "std", feature = "std-output", test))]
+#[cfg(any(all(feature = "std", feature = "default"), test))]
 use crate::file_utils::{read_file, write_file, write_private_file};
 
 #[cfg(any(feature = "testing", test))]
@@ -248,13 +248,13 @@ impl SecretKey {
     }
 
     /// Attempts to write the key bytes to the configured file path.
-    #[cfg(any(feature = "std-output", test))]
+    #[cfg(any(all(feature = "std", feature = "default"), test))]
     pub fn to_file<P: AsRef<Path>>(&self, file: P) -> Result<(), ErrorExt> {
         write_private_file(file, self.to_pem()?).map_err(ErrorExt::SecretKeySave)
     }
 
     /// Attempts to read the key bytes from configured file path.
-    #[cfg(any(feature = "std-output", test))]
+    #[cfg(any(all(feature = "std", feature = "default"), test))]
     pub fn from_file<P: AsRef<Path>>(file: P) -> Result<Self, ErrorExt> {
         let data = read_file(file).map_err(ErrorExt::SecretKeyLoad)?;
         Self::from_pem(data)
@@ -531,13 +531,13 @@ impl PublicKey {
     }
 
     /// Attempts to write the key bytes to the configured file path.
-    #[cfg(any(feature = "std-output", test))]
+    #[cfg(any(all(feature = "std", feature = "default"), test))]
     pub fn to_file<P: AsRef<Path>>(&self, file: P) -> Result<(), ErrorExt> {
         write_file(file, self.to_pem()?).map_err(ErrorExt::PublicKeySave)
     }
 
     /// Attempts to read the key bytes from configured file path.
-    #[cfg(any(feature = "std-output", test))]
+    #[cfg(any(all(feature = "std", feature = "default"), test))]
     pub fn from_file<P: AsRef<Path>>(file: P) -> Result<Self, ErrorExt> {
         let data = read_file(file).map_err(ErrorExt::PublicKeyLoad)?;
         Self::from_pem(data)

@@ -125,7 +125,7 @@ lint-contracts-rs:
 	cd smart_contracts/contracts && $(CARGO) clippy $(patsubst %, -p %, $(ALL_CONTRACTS)) -- -D warnings -A renamed_and_removed_lints
 
 .PHONY: lint
-lint: lint-contracts-rs lint-default-features lint-all-features lint-smart-contracts lint-sdk-features
+lint: lint-contracts-rs lint-default-features lint-all-features lint-smart-contracts
 
 .PHONY: lint-default-features
 lint-default-features:
